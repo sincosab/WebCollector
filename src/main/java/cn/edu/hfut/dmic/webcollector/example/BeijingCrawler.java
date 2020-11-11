@@ -39,6 +39,9 @@ import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
  *
  * @author hu
  */
+
+
+
 public class BeijingCrawler extends BreadthCrawler {
 
     /*
