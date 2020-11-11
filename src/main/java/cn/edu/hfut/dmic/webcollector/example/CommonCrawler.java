@@ -21,99 +21,134 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.alibaba.fastjson.JSON;
+
+import cn.edu.hfut.dmic.contentextractor.CrawlData;
+import cn.edu.hfut.dmic.contentextractor.WebData;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatums;
 import cn.edu.hfut.dmic.webcollector.model.Page;
 import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
-
-
-
+import lombok.extern.slf4j.Slf4j;
 /**
- * WebCollector 2.x版本的tutorial(2.20以上) 
- * 2.x版本特性：
- * 1）自定义遍历策略，可完成更为复杂的遍历业务，例如分页、AJAX
+ * WebCollector 2.x版本的tutorial(2.20以上) 2.x版本特性： 1）自定义遍历策略，可完成更为复杂的遍历业务，例如分页、AJAX
  * 2）可以为每个URL设置附加信息(MetaData)，利用附加信息可以完成很多复杂业务，例如深度获取、锚文本获取、引用页面获取、POST参数传递、增量更新等。
  * 3）使用插件机制，WebCollector内置两套插件。
- * 4）内置一套基于内存的插件（RamCrawler)，不依赖文件系统或数据库，适合一次性爬取，例如实时爬取搜索引擎。
- * 5）内置一套基于Berkeley DB（BreadthCrawler)的插件：适合处理长期和大量级的任务，并具有断点爬取功能，不会因为宕机、关闭导致数据丢失。 
- * 6）集成selenium，可以对javascript生成信息进行抽取
- * 7）可轻松自定义http请求，并内置多代理随机切换功能。 可通过定义http请求实现模拟登录。 
- * 8）使用slf4j作为日志门面，可对接多种日志
+ * 4）内置一套基于内存的插件（RamCrawler)，不依赖文件系统或数据库，适合一次性爬取，例如实时爬取搜索引擎。 5）内置一套基于Berkeley
+ * DB（BreadthCrawler)的插件：适合处理长期和大量级的任务，并具有断点爬取功能，不会因为宕机、关闭导致数据丢失。
+ * 6）集成selenium，可以对javascript生成信息进行抽取 7）可轻松自定义http请求，并内置多代理随机切换功能。
+ * 可通过定义http请求实现模拟登录。 8）使用slf4j作为日志门面，可对接多种日志
  *
  * 可在cn.edu.hfut.dmic.webcollector.example包中找到例子(Demo)
  *
  * @author hu
  */
+@Slf4j
 public class CommonCrawler extends BreadthCrawler {
-	 private String matchUrl="";
+	private WebData webCrawlData;
+	private String matchUrls = "";
 
-    /*
-        该例子利用正则控制爬虫的遍历，
-        另一种常用遍历方法可参考DemoTypeCrawler
-    */
-    
-    public CommonCrawler(String crawlPath, boolean autoParse,List<String> seeds,List<String> regexs,String matchUrl) {
-    	super(crawlPath, autoParse);
-        for (int i=0;i<seeds.size();i++) {
-        	  addSeed(seeds.get(i));
-        }
-        for (int i=0;i<regexs.size();i++) {
-        	 addRegex(regexs.get(i));
-        }
-         addRegex("-.*#.*");
-         matchUrl=matchUrl;
-        //需要抓取图片时设置为true，并加入图片的正则规则
-//        setParseImg(true);
-        
-        //设置每个线程的抓取间隔（毫秒）
+	/*
+	 * 该例子利用正则控制爬虫的遍历， 另一种常用遍历方法可参考DemoTypeCrawler
+	 */
+
+	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
+		super(crawlPath, autoParse);
+		addSeed(webData.getInitUrl());
+		for (int i = webData.getPageStart(); i < webData.getPageEnd(); i++) {
+			addSeed(webData.getPageUrl() + i);
+		}
+		addRegex(webData.getRegex());
+		addRegex("-.*#.*");
+		// 需要抓取图片时设置为true，并加入图片的正则规则
+		// setParseImg(true);
+		matchUrls = webData.getMatchUrl();
+		webCrawlData = webData;
+		// 设置每个线程的抓取间隔（毫秒）
 //        setExecuteInterval(1000);
-        getConf().setExecuteInterval(1000);
-        
-        //设置线程数
-        setThreads(30);
-    }
+		getConf().setExecuteInterval(1000);
 
-    /*
-        可以往next中添加希望后续爬取的任务，任务可以是URL或者CrawlDatum
-        爬虫不会重复爬取任务，从2.20版之后，爬虫根据CrawlDatum的key去重，而不是URL
-        因此如果希望重复爬取某个URL，只要将CrawlDatum的key设置为一个历史中不存在的值即可
-        例如增量爬取，可以使用 爬取时间+URL作为key。
-    
-        新版本中，可以直接通过 page.select(css选择器)方法来抽取网页中的信息，等价于
-        page.getDoc().select(css选择器)方法，page.getDoc()获取到的是Jsoup中的
-        Document对象，细节请参考Jsoup教程
-    */
-    @Override
-    public void visit(Page page, CrawlDatums next) {
-        if (page.matchUrl( matchUrl)) {
-            String title = page.select("div.div-content").first().text();
-            String keyword = page.select("div.div-content").first().text();
-            String author = page.select("a#uid").first().text();
-            String content =page.select("div.div-content").first().text();
-            String source = page.select("div.div-content").first().text();
-            String url = page.select("div.div-content").first().text();
-            String publishTime = page.select("div.div-content").first().text();
-           // System.out.println("title:" + title + "\tauthor:" + author);
-            System.out.println("content:" +content);
-        }
-    }
+		// 设置线程数
+		// setThreads(30);
+	}
 
+	/*
+	 * 可以往next中添加希望后续爬取的任务，任务可以是URL或者CrawlDatum
+	 * 爬虫不会重复爬取任务，从2.20版之后，爬虫根据CrawlDatum的key去重，而不是URL
+	 * 因此如果希望重复爬取某个URL，只要将CrawlDatum的key设置为一个历史中不存在的值即可 例如增量爬取，可以使用 爬取时间+URL作为key。
+	 * 
+	 * 新版本中，可以直接通过 page.select(css选择器)方法来抽取网页中的信息，等价于
+	 * page.getDoc().select(css选择器)方法，page.getDoc()获取到的是Jsoup中的
+	 * Document对象，细节请参考Jsoup教程
+	 */
+	@Override
+	public void visit(Page page, CrawlDatums next) {
+		if (page.matchUrl(matchUrls)) {
+			String title = getStr(page, webCrawlData.getTitle());
+			String content = getStr(page, webCrawlData.getContent());
+			String keyword = getMeta(page, webCrawlData.getKeyword());
+			String author = getStr(page, webCrawlData.getAuthor());
+			String source =getMeta(page, webCrawlData.getSource());
+			String url =page.crawlDatum().url();
+			String publishTime = getStr(page, webCrawlData.getPublishTime());
+			String siteDomain =getMeta(page, webCrawlData.getSiteDomain());
+			String siteName = getMeta(page, webCrawlData.getSiteName());
 
-    public static void main(String[] args) throws Exception {
-    	List<String> seeds=new ArrayList<String>();
-    	List<String> regexs =new ArrayList<String>();
-    	String initUrl="https://ggzyfw.beijing.gov.cn/";
-    	 seeds.add(initUrl);
-    	String seed="https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index_";
-    	for (int i=1;i<100;i++) {
-    		  seeds.add(seed+i);
-    	}
-    	String regex="https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*";
-    	regexs.add(regex);
-    	
-        String matchUrl="https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*/.*";
-        
-        CommonCrawler crawler = new CommonCrawler("crawl", true,seeds,regexs,matchUrl);
-        crawler.start(3);
-    }
+			CrawlData crawlData = new CrawlData();
+			crawlData.setTitle(title);
+			crawlData.setContent(content);
+			crawlData.setKeyword(keyword);
+			crawlData.setAuthor(author);
+			crawlData.setSource(source);
+			crawlData.setSiteDomain(siteDomain);
+			crawlData.setSiteName(siteName);
+			crawlData.setUrl(url);
+			crawlData.setPublishTime(publishTime);
+			log.info(JSON.toJSONString(crawlData));
+			//log.info(content);
+		
+
+		}
+	}
+
+	public String getStr(Page page, String features) {
+		String str = "";
+		try {
+			str = page.select(features).first().text();
+		} catch (Exception e) {
+			//System.out.println("content:" + e);
+		}
+		return str;
+	}
+	
+	public String getMeta(Page page, String features) {
+		String str = "";
+		try {
+			str = page.meta(features);
+		} catch (Exception e) {
+			//System.out.println("content:" + e);
+		}
+		return str;
+	}
+
+	public static void main(String[] args) throws Exception {
+		WebData webData = new WebData();
+		webData.setInitUrl("https://ggzyfw.beijing.gov.cn/");
+		webData.setPageUrl("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index_");
+		webData.setPageStart(1);
+		webData.setPageEnd(10);
+		webData.setRegex("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*");
+		webData.setMatchUrl("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*/.*");
+		webData.setTitle(".div-title");
+		webData.setContent("div.div-content");
+		webData.setKeyword("ColumnKeywords");
+		webData.setAuthor("");
+		webData.setPublishTime("div.div-content");
+		webData.setSiteDomain("SiteDomain");
+		webData.setSiteName("SiteName");
+		webData.setSource("ContentSource");
+		CommonCrawler crawler = new CommonCrawler("crawl", true, webData);
+		crawler.start(4);
+		// crawler.setThreads(1);
+	}
 
 }
