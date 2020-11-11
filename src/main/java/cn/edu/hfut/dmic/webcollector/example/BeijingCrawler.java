@@ -44,6 +44,8 @@ import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
 
 public class BeijingCrawler extends BreadthCrawler {
 
+	
+	
     /*
         该例子利用正则控制爬虫的遍历，
         另一种常用遍历方法可参考DemoTypeCrawler
