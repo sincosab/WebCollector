@@ -35,13 +35,11 @@ public class WebData {
     private String regex = null;
     private String title = null;
     private String keyword = null;
-    private String author = null;
     private String content = null;
-    private String source = null;
     private String url = null;
     private String publishTime  = null;
-    private String  siteName  = null;
-    private String  siteDomain  = null;
+    private String  site  = null;
+    private String  domain  = null;
 	
 
    

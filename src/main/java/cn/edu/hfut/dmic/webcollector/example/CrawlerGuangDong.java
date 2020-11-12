@@ -39,25 +39,31 @@ import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
  *
  * @author hu
  */
+public class CrawlerGuangDong extends BreadthCrawler {
 
-
-
-public class BeijingCrawler extends BreadthCrawler {
-
-	
-	
     /*
         该例子利用正则控制爬虫的遍历，
         另一种常用遍历方法可参考DemoTypeCrawler
     */
-    
-    public BeijingCrawler(String crawlPath, boolean autoParse) {
+    int count=0;
+    public CrawlerGuangDong(String crawlPath, boolean autoParse) {
         super(crawlPath, autoParse);
-        addSeed("https://ggzyfw.beijing.gov.cn/");
-        addSeed("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index_2.html");
-        addRegex("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*");
-      // addRegex("https://blog.csdn.net/.*/article/details/.*");
-      //  addRegex("-.*#.*");
+        String param="orgCode=&tradeTypeId=Construction&queryType=1&tradeItemId=gc_res_bulletin&bulletinName=&startTime=&endTime=&pageNum=";
+        String url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/bulletinList?";
+        //addSeed("");
+       // addSeed("http://www.ccgp.gov.cn/zcdt/index_"+i+".htm");
+        for (int i=1;i<2;i++) {
+        addSeed(url+param+i);
+        }
+      // addSeed("http://www.ccgp.gov.cn/zcdt/index_2.htm");
+     //   http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=3e31ddd26dd445fa8041e2ce75dd0e61&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1        
+        param="&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1";
+	    
+    	url="/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
+        
+        addRegex(url+"[0-9a-f]{32}"+param);
+
+        addRegex("-.*#.*");
         
         //需要抓取图片时设置为true，并加入图片的正则规则
 //        setParseImg(true);
@@ -67,7 +73,7 @@ public class BeijingCrawler extends BreadthCrawler {
         getConf().setExecuteInterval(1000);
         
         //设置线程数
-        setThreads(30);
+       // setThreads(30);
     }
 
     /*
@@ -82,18 +88,27 @@ public class BeijingCrawler extends BreadthCrawler {
     */
     @Override
     public void visit(Page page, CrawlDatums next) {
-        if (page.matchUrl("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*/.*")) {
-          //  String title = page.select("div.div-content").first().text();
-          //  String author = page.select("a#uid").first().text();
-            String content =page.select("div.div-content").first().text();
+        String param="&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1";
+    	    
+    	String url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
+    	
+        if (page.matchUrl(url+".*"+param)) {
+           // String title = page.select("h1.title-article").first().text();
+           // String author = page.select("a#uid").first().text();
+           
            // System.out.println("title:" + title + "\tauthor:" + author);
-            System.out.println("content:" +content);
+            
+            String content= page.select("div.tab-content-ds").first().text();
+           // System.out.println("page:" +page.crawlDatum().url());
+            count=count+1;
+            System.out.println("count:" +count);
         }
     }
 
 
     public static void main(String[] args) throws Exception {
-        BeijingCrawler crawler = new BeijingCrawler("crawl", true);
+        CrawlerGuangDong crawler = new CrawlerGuangDong("crawl", true);
+//        crawler.setResumable(true);
         crawler.start(2);
     }
 

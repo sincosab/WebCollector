@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author hu
  */
 @Slf4j
-public class CommonCrawler extends BreadthCrawler {
+public class EadylyCrawler extends BreadthCrawler {
 	private WebData webCrawlData;
 	private String matchUrls = "";
 
@@ -56,11 +56,11 @@ public class CommonCrawler extends BreadthCrawler {
 	 * 该例子利用正则控制爬虫的遍历， 另一种常用遍历方法可参考DemoTypeCrawler
 	 */
 
-	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
+	public EadylyCrawler(String crawlPath, boolean autoParse, WebData webData) {
 		super(crawlPath, autoParse);
 		addSeed(webData.getInitUrl());
 		for (int i = webData.getPageStart(); i < webData.getPageEnd()+1; i++) {
-			addSeed(webData.getPageUrl() + i+".htm");
+			addSeed(webData.getPageUrl() + i);
 		}
 		addRegex(webData.getRegex());
 		addRegex("-.*#.*");
@@ -87,7 +87,7 @@ public class CommonCrawler extends BreadthCrawler {
 	 */
 	@Override
 	public void visit(Page page, CrawlDatums next) {
-		 if (page.matchUrl(matchUrls)) {
+		//if (page.matchUrl(matchUrls)) {
 			String content = getStr(page, webCrawlData.getContent());
 			String title = getMeta(page, webCrawlData.getTitle());
 			String siteName = getMeta(page, webCrawlData.getSite());
@@ -104,7 +104,6 @@ public class CommonCrawler extends BreadthCrawler {
 			crawlData.setUrl(url);
 			crawlData.setPublishTime(publishTime);
 			log.info(JSON.toJSONString(crawlData));
-		 }
 	}
 
 	public String getStr(Page page, String features) {
@@ -148,7 +147,7 @@ public class CommonCrawler extends BreadthCrawler {
 		webData.setPublishTime("PubDate");
 		webData.setSite("SiteName");
 		webData.setDomain("SiteDomain");
-		CommonCrawler crawler = new CommonCrawler("crawl", true, webData);
+		EadylyCrawler crawler = new EadylyCrawler("crawl", true, webData);
 		crawler.start(3);
 		// crawler.setThreads(1);
 	}
