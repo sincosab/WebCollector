@@ -55,7 +55,8 @@ public class BeijingCrawler extends BreadthCrawler {
         super(crawlPath, autoParse);
         addSeed("https://ggzyfw.beijing.gov.cn/");
         addSeed("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index_2.html");
-        addRegex("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*");
+        addRegex("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*/.*");
+       // addRegex("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/.*");
       // addRegex("https://blog.csdn.net/.*/article/details/.*");
       //  addRegex("-.*#.*");
         

@@ -52,18 +52,24 @@ public class CrawlerGuangDong extends BreadthCrawler {
         String url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/bulletinList?";
         //addSeed("");
        // addSeed("http://www.ccgp.gov.cn/zcdt/index_"+i+".htm");
+        //http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/bulletinList?orgCode=&tradeTypeId=Construction&queryType=1&tradeItemId=gc_res_bulletin&bulletinName=&startTime=&endTime=&pageNum=1
         for (int i=1;i<2;i++) {
         addSeed(url+param+i);
         }
       // addSeed("http://www.ccgp.gov.cn/zcdt/index_2.htm");
      //   http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=3e31ddd26dd445fa8041e2ce75dd0e61&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1        
+     
+      //  http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=b95268e1225e4bf39299a10fffd290f5&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1 
+        
         param="&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1";
 	    
-    	url="/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
+    	//url="/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
         
-        addRegex(url+"[0-9a-f]{32}"+param);
+     addRegex("http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/.*");
+        
+       // addRegex(url+".*"+param);
 
-        addRegex("-.*#.*");
+      addRegex("-.*#.*");
         
         //需要抓取图片时设置为true，并加入图片的正则规则
 //        setParseImg(true);
@@ -90,19 +96,27 @@ public class CrawlerGuangDong extends BreadthCrawler {
     public void visit(Page page, CrawlDatums next) {
         String param="&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1";
     	    
-    	String url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
+    	String url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=.*";
     	
-        if (page.matchUrl(url+".*"+param)) {
+        param="&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1";
+	    
+      	//url="/osh-web/project/projectbulletin/toBullDetail?bulletinId=";
+          
+//url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=50a2d11df99d4b26991fe1c64030e821&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1"; 
+url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail?bulletinId=[0-9a-f]{32}&tradeTypeId=Construction&tradeItemId=gc_res_bulletin&queryType=1"; 
+url="http://bs.gdggzy.org.cn/osh-web/project/projectbulletin/toBullDetail.*"; 
+
+ //System.out.println("urlss:" +page.crawlDatum().url());
+ //if (page.crawlDatum().url().contains(url)) {
+  if (page.matchUrl(url)) {
            // String title = page.select("h1.title-article").first().text();
            // String author = page.select("a#uid").first().text();
-           
+   
            // System.out.println("title:" + title + "\tauthor:" + author);
             
             String content= page.select("div.tab-content-ds").first().text();
-           // System.out.println("page:" +page.crawlDatum().url());
-            count=count+1;
-            System.out.println("count:" +count);
-        }
+            System.out.println("content:" +content);
+       }
     }
 
 
