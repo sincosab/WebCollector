@@ -17,23 +17,23 @@
  */
 package cn.edu.hfut.dmic.webcollector.example;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import javax.annotation.Resource;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
 
-import cn.edu.hfut.dmic.contentextractor.CrawlData;
 import cn.edu.hfut.dmic.contentextractor.WebData;
+import cn.edu.hfut.dmic.entity.CrawlData;
+import cn.edu.hfut.dmic.mapper.CrawlDataMapper;
+import cn.edu.hfut.dmic.service.ICrawlDataService;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatums;
 import cn.edu.hfut.dmic.webcollector.model.Page;
 import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
 import lombok.extern.slf4j.Slf4j;
+
 /**
  * WebCollector 2.x版本的tutorial(2.20以上) 2.x版本特性： 1）自定义遍历策略，可完成更为复杂的遍历业务，例如分页、AJAX
  * 2）可以为每个URL设置附加信息(MetaData)，利用附加信息可以完成很多复杂业务，例如深度获取、锚文本获取、引用页面获取、POST参数传递、增量更新等。
@@ -48,19 +48,43 @@ import lombok.extern.slf4j.Slf4j;
  * @author hu
  */
 @Slf4j
+//@Service
 public class CommonCrawler extends BreadthCrawler {
 	private WebData webCrawlData;
 	private String matchUrls = "";
+	@Resource
+	private CrawlDataMapper mapper;
 
+	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
+		super(crawlPath, autoParse);
+
+		addSeed(webData.getInitUrl());
+		for (int i = webData.getPageStart(); i < webData.getPageEnd() + 1; i++) {
+			addSeed(webData.getPageUrl() + i + ".htm");
+		}
+		addRegex(webData.getRegex());
+		addRegex("-.*#.*");
+		// 需要抓取图片时设置为true，并加入图片的正则规则
+		// setParseImg(true);
+		matchUrls = webData.getMatchUrl();
+		webCrawlData = webData;
+		// 设置每个线程的抓取间隔（毫秒）
+//        setExecuteInterval(1000);
+		getConf().setExecuteInterval(1000);
+
+		// 设置线程数
+		// setThreads(30);
+	}
 	/*
 	 * 该例子利用正则控制爬虫的遍历， 另一种常用遍历方法可参考DemoTypeCrawler
 	 */
 
-	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
+	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData, CrawlDataMapper baseMapper) {
 		super(crawlPath, autoParse);
+		mapper =baseMapper;
 		addSeed(webData.getInitUrl());
-		for (int i = webData.getPageStart(); i < webData.getPageEnd()+1; i++) {
-			addSeed(webData.getPageUrl() + i+".htm");
+		for (int i = webData.getPageStart(); i < webData.getPageEnd() + 1; i++) {
+			addSeed(webData.getPageUrl() + i + ".htm");
 		}
 		addRegex(webData.getRegex());
 		addRegex("-.*#.*");
@@ -87,14 +111,14 @@ public class CommonCrawler extends BreadthCrawler {
 	 */
 	@Override
 	public void visit(Page page, CrawlDatums next) {
-		 if (page.matchUrl(matchUrls)) {
+		if (page.matchUrl(matchUrls)) {
 			String content = getStr(page, webCrawlData.getContent());
 			String title = getMeta(page, webCrawlData.getTitle());
 			String siteName = getMeta(page, webCrawlData.getSite());
 			String keyword = getMeta(page, webCrawlData.getKeyword());
-			String url =page.crawlDatum().url();
+			String url = page.crawlDatum().url();
 			String publishTime = getMeta(page, webCrawlData.getPublishTime());
-			String siteDomain =getMeta(page, webCrawlData.getDomain());
+			String siteDomain = getMeta(page, webCrawlData.getDomain());
 			CrawlData crawlData = new CrawlData();
 			crawlData.setTitle(title);
 			crawlData.setContent(content);
@@ -104,7 +128,8 @@ public class CommonCrawler extends BreadthCrawler {
 			crawlData.setUrl(url);
 			crawlData.setPublishTime(publishTime);
 			log.info(JSON.toJSONString(crawlData));
-		 }
+			mapper.insert(crawlData);
+		}
 	}
 
 	public String getStr(Page page, String features) {
@@ -112,7 +137,7 @@ public class CommonCrawler extends BreadthCrawler {
 		try {
 			str = page.select(features).first().text();
 		} catch (Exception e) {
-			//System.out.println("content:" + e);
+			// System.out.println("content:" + e);
 		}
 		return str;
 	}
@@ -120,22 +145,22 @@ public class CommonCrawler extends BreadthCrawler {
 	public String getMeta(Page page, String features) {
 		String str = "";
 		try {
-			 //str = page.select("meta[http-equiv="+features+"]").first().text();
-			  Elements attr = page.select(features);
-		        if(attr!=null){
-		            Element element = attr.get(0);
-		            return element.attr("content");
-		        }
+			// str = page.select("meta[http-equiv="+features+"]").first().text();
+			Elements attr = page.select(features);
+			if (attr != null) {
+				Element element = attr.get(0);
+				return element.attr("content");
+			}
 
 		} catch (Exception e) {
-			//System.out.println("content:" + e);
+			// System.out.println("content:" + e);
 		}
 		return str;
 	}
 
 	public static void main(String[] args) throws Exception {
 		WebData webData = new WebData();
-		//https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index.html
+		// https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index.html
 		webData.setInitUrl("https://ggzyfw.beijing.gov.cn/");
 		webData.setPageUrl("https://ggzyfw.beijing.gov.cn/jyxxggjtbyqs/index_");
 		webData.setPageStart(2);
@@ -148,8 +173,8 @@ public class CommonCrawler extends BreadthCrawler {
 		webData.setPublishTime("PubDate");
 		webData.setSite("SiteName");
 		webData.setDomain("SiteDomain");
-		CommonCrawler crawler = new CommonCrawler("crawl", true, webData);
-		crawler.start(3);
+		// CommonCrawler crawler = new CommonCrawler("crawl", true, webData);
+		// crawler.start(3);
 		// crawler.setThreads(1);
 	}
 

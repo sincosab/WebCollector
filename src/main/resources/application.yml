@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: crawl
+  profiles:
+    active: dev
+  #jackson:
+    #date-format: yyyy-MM-dd HH:mm:ss
+
+
+#mybatis-plus
+mybatis-plus:
+  # MyBaits 别名包扫描路径，通过该属性可以给包中的类注册别名
+  type-aliases-package: cn.edu.hfut.dmic
+  mapper-locations: classpath:mapping/**/*.xml
+  configuration:
+    # 驼峰下划线转换
+    map-underscore-to-camel-case: true
+    #日志
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+#分页插件
+pagehelper:
+  helper-dialect: mysql
+
+
+#logback日志路径
+logback:
+  path: "./${spring.application.name}-logs"
+
+
+

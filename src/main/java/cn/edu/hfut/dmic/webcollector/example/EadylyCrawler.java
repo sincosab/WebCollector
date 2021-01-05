@@ -28,7 +28,7 @@ import org.jsoup.select.Elements;
 
 import com.alibaba.fastjson.JSON;
 
-import cn.edu.hfut.dmic.contentextractor.CrawlData;
+import cn.edu.hfut.dmic.contentextractor.CrawlData2;
 import cn.edu.hfut.dmic.contentextractor.WebData;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatums;
 import cn.edu.hfut.dmic.webcollector.model.Page;
@@ -95,7 +95,7 @@ public class EadylyCrawler extends BreadthCrawler {
 			String url =page.crawlDatum().url();
 			String publishTime = getMeta(page, webCrawlData.getPublishTime());
 			String siteDomain =getMeta(page, webCrawlData.getDomain());
-			CrawlData crawlData = new CrawlData();
+			CrawlData2 crawlData = new CrawlData2();
 			crawlData.setTitle(title);
 			crawlData.setContent(content);
 			crawlData.setKeyword(keyword);

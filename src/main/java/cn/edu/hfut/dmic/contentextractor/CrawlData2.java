@@ -26,7 +26,7 @@ import lombok.Data;
  * @author hu
  */
 @Data
-public class CrawlData {
+public class CrawlData2 {
 	private String title = null;
 	private String content = null;
 	private String keyword = null;
