@@ -41,6 +41,8 @@ public class CrawlSite implements Serializable {
     private String matchUrl;
 
     private String metaFlag;
+    
+    private String content;
 
     private Integer status;
 
@@ -48,5 +50,10 @@ public class CrawlSite implements Serializable {
 
     private LocalDateTime updateTime;
 
-
+    private String publishTime;
+    private String title;
+    private String keyword;
+    private String domain;
+    private String domainName;
+    private String baseUrl ;
 }

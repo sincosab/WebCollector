@@ -21,14 +21,13 @@ import javax.annotation.Resource;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
 
 import cn.edu.hfut.dmic.contentextractor.WebData;
 import cn.edu.hfut.dmic.entity.CrawlData;
+import cn.edu.hfut.dmic.entity.CrawlSite;
 import cn.edu.hfut.dmic.mapper.CrawlDataMapper;
-import cn.edu.hfut.dmic.service.ICrawlDataService;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatums;
 import cn.edu.hfut.dmic.webcollector.model.Page;
 import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
@@ -51,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 //@Service
 public class CommonCrawler extends BreadthCrawler {
 	private WebData webCrawlData;
+	private CrawlSite site;
 	private String matchUrls = "";
 	@Resource
 	private CrawlDataMapper mapper;
@@ -79,19 +79,19 @@ public class CommonCrawler extends BreadthCrawler {
 	 * 该例子利用正则控制爬虫的遍历， 另一种常用遍历方法可参考DemoTypeCrawler
 	 */
 
-	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData, CrawlDataMapper baseMapper) {
+	public CommonCrawler(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper) {
 		super(crawlPath, autoParse);
 		mapper =baseMapper;
-		addSeed(webData.getInitUrl());
-		for (int i = webData.getPageStart(); i < webData.getPageEnd() + 1; i++) {
-			addSeed(webData.getPageUrl() + i + ".htm");
+		addSeed(crawlSite.getInitUrl());
+		for (int i = crawlSite.getPageStart(); i < crawlSite.getPageEnd() + 1; i++) {
+			addSeed(crawlSite.getPageUrl() + i + ".htm");
 		}
-		addRegex(webData.getRegex());
+		addRegex(crawlSite.getRegex());
 		addRegex("-.*#.*");
 		// 需要抓取图片时设置为true，并加入图片的正则规则
 		// setParseImg(true);
-		matchUrls = webData.getMatchUrl();
-		webCrawlData = webData;
+		matchUrls = crawlSite.getMatchUrl();
+		site = crawlSite;
 		// 设置每个线程的抓取间隔（毫秒）
 //        setExecuteInterval(1000);
 		getConf().setExecuteInterval(1000);
@@ -109,8 +109,32 @@ public class CommonCrawler extends BreadthCrawler {
 	 * page.getDoc().select(css选择器)方法，page.getDoc()获取到的是Jsoup中的
 	 * Document对象，细节请参考Jsoup教程
 	 */
+	//@Override
+	
+	
 	@Override
 	public void visit(Page page, CrawlDatums next) {
+		if (page.matchUrl(matchUrls)) {
+			String content = getStr(page, site.getContent());
+			String title = getMeta(page, site.getTitle());
+			String siteName = getMeta(page, site.getSite());
+			String keyword = getMeta(page, site.getKeyword());
+			String url = page.crawlDatum().url();
+			String publishTime = getMeta(page, site.getPublishTime());
+			String siteDomain = getMeta(page, site.getDomain());
+			CrawlData crawlData = new CrawlData();
+			crawlData.setTitle(title);
+			crawlData.setContent(content);
+			crawlData.setKeyword(keyword);
+			crawlData.setDomain(siteDomain);
+			crawlData.setSite(siteName);
+			crawlData.setUrl(url);
+			crawlData.setPublishTime(publishTime);
+			log.info(JSON.toJSONString(crawlData));
+			mapper.insert(crawlData);
+		}
+	}
+	public void visit1(Page page, CrawlDatums next) {
 		if (page.matchUrl(matchUrls)) {
 			String content = getStr(page, webCrawlData.getContent());
 			String title = getMeta(page, webCrawlData.getTitle());

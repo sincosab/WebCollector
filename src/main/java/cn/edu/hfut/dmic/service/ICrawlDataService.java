@@ -16,4 +16,6 @@ public interface ICrawlDataService extends IService<CrawlData> {
 
 	void beijing() throws Exception;
 
+	void getSite() throws Exception;
+
 }
