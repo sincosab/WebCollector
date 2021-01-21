@@ -45,7 +45,7 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 	public synchronized void getSite() throws Exception {
 		log.info("getSite begin");
 		LambdaQueryWrapper<CrawlSite> q = new LambdaQueryWrapper<>();
-		q.eq(CrawlSite::getStatus, "1").last("limit 0 , 10");
+		q.eq(CrawlSite::getStatus, "0").last("limit 0 , 10");
 		List<CrawlSite> list = siteMapper.selectList(q);
 		while (list != null && list.size() > 0) {
 			for (int i = 0; i < list.size(); i++) {
@@ -55,8 +55,18 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 					String baseUrl = list.get(i).getBaseUrl();
 					crawlSite.setInitUrl(baseUrl + list.get(i).getInitUrl());
 					crawlSite.setPageUrl(baseUrl + list.get(i).getPageUrl());
-					crawlSite.setRegex(baseUrl + list.get(i).getRegex());
-					crawlSite.setMatchUrl(baseUrl + list.get(i).getMatchUrl());
+					// 有些网站详情页面不在当前根目录下
+					if (!list.get(i).getRegex().contains("//www.")) {
+						crawlSite.setRegex(baseUrl + list.get(i).getRegex());
+					} else {
+						crawlSite.setRegex(list.get(i).getRegex());
+					}
+					if (!list.get(i).getMatchUrl().contains("//www.")) {
+						crawlSite.setMatchUrl(baseUrl + list.get(i).getMatchUrl());
+					} else {
+						crawlSite.setMatchUrl( list.get(i).getMatchUrl());
+					}
+
 					CommonCrawler crawler = new CommonCrawler("crawl", true, crawlSite, this.getBaseMapper());
 					crawler.start(3);
 					/* 开始阻塞 */
@@ -66,7 +76,7 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 					log.info("getSite end" + crawlSite.getDomainName());
 					CrawlSite site = new CrawlSite();
 					site.setId(list.get(i).getId());
-					site.setStatus(2);
+					site.setStatus(1);
 					siteMapper.updateById(site);
 				} catch (Exception e) {
 					log.info("getSite error " + crawlSite.getDomainName(), e);

@@ -14,10 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 //@MapperScan("cn.edu.hfut.dmic.mapper.**")
 //@ComponentScan(basePackages = "cn.edu.hfut.dmic.mapper") 
-public class Application {
+public class WebCollectorApplication {
     public static void main(String[] args) {
         log.info("-----------------开始启动----------------");
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(WebCollectorApplication.class, args);
         log.info("-----------------启动完成----------------");
     }
 

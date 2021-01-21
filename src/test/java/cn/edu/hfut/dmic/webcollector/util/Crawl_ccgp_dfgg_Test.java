@@ -7,7 +7,7 @@ import cn.edu.hfut.dmic.webcollector.example.CommonCrawler;
 
 public class Crawl_ccgp_dfgg_Test {
 
-	// 国家
+	// 国家地方公告
 	@Test
 	public void ccgp() throws Exception {
 		WebData webData = new WebData();
