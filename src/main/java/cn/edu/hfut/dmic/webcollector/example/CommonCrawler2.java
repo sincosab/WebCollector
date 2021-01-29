@@ -21,7 +21,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,44 +42,34 @@ import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonCrawler extends BreadthCrawler {
+public class CommonCrawler2 extends BreadthCrawler {
 	private CrawlSite site;
 	private String matchUrls = "";
 	private CrawlDataMapper mapper;
-	private List<String> crawlDate;
-	public CommonCrawler(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper,	List<String> crawlBeginDate) {
+
+	public CommonCrawler2(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper) {
 		super(crawlPath, autoParse);
 		mapper = baseMapper;
-		crawlDate= crawlBeginDate;
 		addSeed(crawlSite.getInitUrl());
 		for (int i = crawlSite.getPageStart(); i < crawlSite.getPageEnd() + 1; i++) {
 			addSeed(crawlSite.getPageUrl() + i + ".htm");
 		}
 		String url = crawlSite.getMatchUrl();
-		matchUrls = url;
-		addRegex(url.substring(10));
-
-		//addRegex(url);
+		addRegex(url);
+		matchUrls =   url ;
+		addRegex(url);
 		site = crawlSite;
 		getConf().setExecuteInterval(1000);
 		// 设置线程数
 		// setThreads(30);
 	}
 
+
 	@Override
 	public void visit(Page page, CrawlDatums next) {
 		boolean succeed = false;
-		if (matchUrls.contains("matchDate:")) {
-			String url = page.url();
-			succeed =matchUrl(url);
-		} else {
-			if (page.matchUrl(matchUrls)) {
-				succeed = true;
-			}
-		}
-
-		if (succeed) {
-
+		if (page.matchUrl(matchUrls)) {
+		
 			String title = getTitle(page, site.getTitle());
 
 			String content = getContent(page, site.getContent());
@@ -104,72 +93,13 @@ public class CommonCrawler extends BreadthCrawler {
 			crawlData.setPublishTime(publishTime);
 			log.info(JSON.toJSONString(crawlData));
 			boolean check = false;
-			// if (check) {
-			mapper.insert(crawlData);
-			// }
+		//	if (check) {
+				mapper.insert(crawlData);
+		//	}
 
 		}
 	}
-	
-	public boolean matchUrl(String url) {
-		boolean succeed= false;
-			//	url.contains(crawlDate.get(0))||url.contains(crawlDate.get(1))||url.contains(crawlDate.get(2));
-		for(int i=0;i<crawlDate.size();i++) {
-			 succeed= succeed||	url.contains(crawlDate.get(i));
-		}
-		return succeed;
 
-	}
-	
-
-	public boolean matchUrl1(String url) {
-		Date date = new Date();
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
-		DateFormat format = new SimpleDateFormat("yyyyMM");
-		String d0 = format.format(date);
-		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1); // 设置为上一个月
-		date = calendar.getTime();
-		String d1 = format.format(date);
-
-		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
-		date = calendar.getTime();
-		String d2 = format.format(date);
-
-		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
-		date = calendar.getTime();
-		String d3 = format.format(date);
-		String pattern0 =  ".*" + d0 + "(0[0-9]|1[0-9]|2[0-9]).*";
-		String pattern1 = ".*" + d1 + "(0[0-9]|1[0-9]|2[0-9]).*";
-		String pattern2 =  ".*" + d2 + "(0[0-9]|1[0-9]|2[0-9]).*";
-		String pattern3 = ".*" + d3 + "(0[0-9]|1[0-9]|2[0-9]).*";
-
-		Pattern r = Pattern.compile(pattern0);
-		Matcher m = r.matcher(url);
-		if (m.matches()) {
-			return true;
-		}
-
-		r = Pattern.compile(pattern1);
-		m = r.matcher(url);
-		if (m.matches()) {
-			return true;
-		}
-
-		r = Pattern.compile(pattern2);
-		m = r.matcher(url);
-		if (m.matches()) {
-			return true;
-		}
-
-		r = Pattern.compile(pattern3);
-		m = r.matcher(url);
-		if (m.matches()) {
-			return true;
-		}
-		return false;
-
-	}
 	public boolean checkTitle(String title) {
 		if (StringUtils.isNotBlank(title)) {
 			return true;
@@ -273,8 +203,56 @@ public class CommonCrawler extends BreadthCrawler {
 		return str;
 	}
 
+	public boolean matchUrl(String url) {
 
-	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
+		Date date = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		DateFormat format = new SimpleDateFormat("yyyyMM");
+		String d0 = format.format(date);
+		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1); // 设置为上一个月
+		date = calendar.getTime();
+		String d1 = format.format(date);
+
+		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
+		date = calendar.getTime();
+		String d2 = format.format(date);
+
+		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
+		date = calendar.getTime();
+		String d3 = format.format(date);
+		String pattern0 = url + ".*" + d0 + "(0[0-9]|1[0-9]|2[0-9]).*";
+		String pattern1 = url + ".*" + d1 + "(0[0-9]|1[0-9]|2[0-9]).*";
+		String pattern2 = url + ".*" + d2 + "(0[0-9]|1[0-9]|2[0-9]).*";
+		String pattern3 = url + ".*" + d3 + "(0[0-9]|1[0-9]|2[0-9]).*";
+
+		Pattern r = Pattern.compile(pattern0);
+		Matcher m = r.matcher(url);
+		if (m.matches()) {
+			return true;
+		}
+
+		r = Pattern.compile(pattern1);
+		m = r.matcher(url);
+		if (m.matches()) {
+			return true;
+		}
+
+		r = Pattern.compile(pattern2);
+		m = r.matcher(url);
+		if (m.matches()) {
+			return true;
+		}
+
+		r = Pattern.compile(pattern3);
+		m = r.matcher(url);
+		if (m.matches()) {
+			return true;
+		}
+		return false;
+
+	}
+	public CommonCrawler2(String crawlPath, boolean autoParse, WebData webData) {
 		super(crawlPath, autoParse);
 
 		addSeed(webData.getInitUrl());
@@ -292,5 +270,6 @@ public class CommonCrawler extends BreadthCrawler {
 		// 设置线程数
 		// setThreads(30);
 	}
+	
 
 }
