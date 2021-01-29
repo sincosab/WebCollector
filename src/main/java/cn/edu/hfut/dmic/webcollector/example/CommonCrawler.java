@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -48,19 +46,25 @@ public class CommonCrawler extends BreadthCrawler {
 	private String matchUrls = "";
 	private CrawlDataMapper mapper;
 	private List<String> crawlDate;
-	public CommonCrawler(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper,	List<String> crawlBeginDate) {
+
+	public CommonCrawler(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper,
+			List<String> crawlBeginDate) {
 		super(crawlPath, autoParse);
 		mapper = baseMapper;
-		crawlDate= crawlBeginDate;
+		crawlDate = crawlBeginDate;
 		addSeed(crawlSite.getInitUrl());
 		for (int i = crawlSite.getPageStart(); i < crawlSite.getPageEnd() + 1; i++) {
 			addSeed(crawlSite.getPageUrl() + i + ".htm");
 		}
 		String url = crawlSite.getMatchUrl();
 		matchUrls = url;
-		addRegex(url.substring(10));
+		if (matchUrls.contains("matchDate:")) {
+			addRegex(url.substring(10));
+		} else {
+			addRegex(url);
+		}
 
-		//addRegex(url);
+		// addRegex(url);
 		site = crawlSite;
 		getConf().setExecuteInterval(1000);
 		// 设置线程数
@@ -72,7 +76,7 @@ public class CommonCrawler extends BreadthCrawler {
 		boolean succeed = false;
 		if (matchUrls.contains("matchDate:")) {
 			String url = page.url();
-			succeed =matchUrl(url);
+			succeed = matchUrl(url);
 		} else {
 			if (page.matchUrl(matchUrls)) {
 				succeed = true;
@@ -86,20 +90,12 @@ public class CommonCrawler extends BreadthCrawler {
 			String content = getContent(page, site.getContent());
 
 			String publishTime = getPublishTime(page, site.getPublishTime());
-
-			String siteName = getMeta(page, site.getSite());
-
-			String keyword = getMeta(page, site.getKeyword());
-
+			
 			String url = page.crawlDatum().url();
-
-			String siteDomain = getMeta(page, site.getDomain());
 			CrawlData crawlData = new CrawlData();
 			crawlData.setTitle(title);
 			crawlData.setContent(content);
-			crawlData.setKeyword(keyword);
-			crawlData.setDomain(siteDomain);
-			crawlData.setSite(siteName);
+		
 			crawlData.setUrl(url);
 			crawlData.setPublishTime(publishTime);
 			log.info(JSON.toJSONString(crawlData));
@@ -110,17 +106,16 @@ public class CommonCrawler extends BreadthCrawler {
 
 		}
 	}
-	
+
 	public boolean matchUrl(String url) {
-		boolean succeed= false;
-			//	url.contains(crawlDate.get(0))||url.contains(crawlDate.get(1))||url.contains(crawlDate.get(2));
-		for(int i=0;i<crawlDate.size();i++) {
-			 succeed= succeed||	url.contains(crawlDate.get(i));
+		boolean succeed = false;
+		// url.contains(crawlDate.get(0))||url.contains(crawlDate.get(1))||url.contains(crawlDate.get(2));
+		for (int i = 0; i < crawlDate.size(); i++) {
+			succeed = succeed || url.contains(crawlDate.get(i));
 		}
 		return succeed;
 
 	}
-	
 
 	public boolean matchUrl1(String url) {
 		Date date = new Date();
@@ -139,9 +134,9 @@ public class CommonCrawler extends BreadthCrawler {
 		calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
 		date = calendar.getTime();
 		String d3 = format.format(date);
-		String pattern0 =  ".*" + d0 + "(0[0-9]|1[0-9]|2[0-9]).*";
+		String pattern0 = ".*" + d0 + "(0[0-9]|1[0-9]|2[0-9]).*";
 		String pattern1 = ".*" + d1 + "(0[0-9]|1[0-9]|2[0-9]).*";
-		String pattern2 =  ".*" + d2 + "(0[0-9]|1[0-9]|2[0-9]).*";
+		String pattern2 = ".*" + d2 + "(0[0-9]|1[0-9]|2[0-9]).*";
 		String pattern3 = ".*" + d3 + "(0[0-9]|1[0-9]|2[0-9]).*";
 
 		Pattern r = Pattern.compile(pattern0);
@@ -170,6 +165,7 @@ public class CommonCrawler extends BreadthCrawler {
 		return false;
 
 	}
+
 	public boolean checkTitle(String title) {
 		if (StringUtils.isNotBlank(title)) {
 			return true;
@@ -272,7 +268,6 @@ public class CommonCrawler extends BreadthCrawler {
 		}
 		return str;
 	}
-
 
 	public CommonCrawler(String crawlPath, boolean autoParse, WebData webData) {
 		super(crawlPath, autoParse);
