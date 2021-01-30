@@ -86,10 +86,6 @@ public class CommonCrawler2 extends BreadthCrawler {
 			CrawlData crawlData = new CrawlData();
 			crawlData.setTitle(title);
 			crawlData.setContent(content);
-			crawlData.setKeyword(keyword);
-			crawlData.setDomain(siteDomain);
-			crawlData.setSite(siteName);
-			crawlData.setUrl(url);
 			crawlData.setPublishTime(publishTime);
 			log.info(JSON.toJSONString(crawlData));
 			boolean check = false;

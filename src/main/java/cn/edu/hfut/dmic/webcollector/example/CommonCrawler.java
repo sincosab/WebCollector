@@ -90,31 +90,32 @@ public class CommonCrawler extends BreadthCrawler {
 			String content = getContent(page, site.getContent());
 
 			String publishTime = getPublishTime(page, site.getPublishTime());
-			
+
 			String url = page.crawlDatum().url();
-			CrawlData crawlData = new CrawlData();
-			crawlData.setTitle(title);
-			crawlData.setContent(content);
-		
-			crawlData.setUrl(url);
-			crawlData.setPublishTime(publishTime);
-			log.info(JSON.toJSONString(crawlData));
-			boolean check = false;
-			// if (check) {
-			mapper.insert(crawlData);
-			// }
+
+			boolean check = checkTitle(title);
+			check = checkContent(content);
+			check = checkPublishTime(publishTime);
+			if (check) {
+				CrawlData crawlData = new CrawlData();
+				crawlData.setTitle(title);
+				crawlData.setContent(content);
+				crawlData.setUrl(url);
+				crawlData.setPublishTime(publishTime);
+				crawlData.setSiteId(site.getId());
+				log.info(JSON.toJSONString(crawlData));
+				mapper.insert(crawlData);
+			}
 
 		}
 	}
 
 	public boolean matchUrl(String url) {
 		boolean succeed = false;
-		// url.contains(crawlDate.get(0))||url.contains(crawlDate.get(1))||url.contains(crawlDate.get(2));
 		for (int i = 0; i < crawlDate.size(); i++) {
 			succeed = succeed || url.contains(crawlDate.get(i));
 		}
 		return succeed;
-
 	}
 
 	public boolean matchUrl1(String url) {
@@ -184,12 +185,9 @@ public class CommonCrawler extends BreadthCrawler {
 		if (StringUtils.isBlank(publishTime)) {
 			return false;
 		}
-
-		String str = "1988-05-20";
 		String pattern = "\\d{4}(\\-|\\/|.)\\d{1,2}\\1\\d{1,2}";
-
 		Pattern r = Pattern.compile(pattern);
-		Matcher m = r.matcher(str);
+		Matcher m = r.matcher( publishTime);
 		System.out.println(m.matches());
 
 		return false;
