@@ -78,11 +78,11 @@ public class CommonCrawler2 extends BreadthCrawler {
 
 			String siteName = getMeta(page, site.getSite());
 
-			String keyword = getMeta(page, site.getKeyword());
+
 
 			String url = page.crawlDatum().url();
 
-			String siteDomain = getMeta(page, site.getDomain());
+
 			CrawlData crawlData = new CrawlData();
 			crawlData.setTitle(title);
 			crawlData.setContent(content);

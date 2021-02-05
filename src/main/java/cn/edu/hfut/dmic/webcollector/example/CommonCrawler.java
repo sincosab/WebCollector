@@ -63,8 +63,6 @@ public class CommonCrawler extends BreadthCrawler {
 		} else {
 			addRegex(url);
 		}
-
-		// addRegex(url);
 		site = crawlSite;
 		getConf().setExecuteInterval(1000);
 		// 设置线程数
@@ -74,6 +72,7 @@ public class CommonCrawler extends BreadthCrawler {
 	@Override
 	public void visit(Page page, CrawlDatums next) {
 		boolean succeed = false;
+		boolean check = false;
 		if (matchUrls.contains("matchDate:")) {
 			String url = page.url();
 			succeed = matchUrl(url);
@@ -82,32 +81,33 @@ public class CommonCrawler extends BreadthCrawler {
 				succeed = true;
 			}
 		}
-
+		String title;
+		String content = null;
+		String publishTime = null;
 		if (succeed) {
-
-			String title = getTitle(page, site.getTitle());
-
-			String content = getContent(page, site.getContent());
-
-			String publishTime = getPublishTime(page, site.getPublishTime());
-
-			String url = page.crawlDatum().url();
-
-			boolean check = checkTitle(title);
-			check = checkContent(content);
-			check = checkPublishTime(publishTime);
+			title = getTitle(page, site.getTitle());
+			check = checkTitle(title);
+			if (check) {
+				content = getContent(page, site.getContent());
+				check = checkContent(content);
+			}
+			if (check) {
+				publishTime = getPublishTime(page, site.getPublishTime());
+				check = checkPublishTime(publishTime);
+			}
 			if (check) {
 				CrawlData crawlData = new CrawlData();
 				crawlData.setTitle(title);
 				crawlData.setContent(content);
+				String url = page.crawlDatum().url();
 				crawlData.setUrl(url);
 				crawlData.setPublishTime(publishTime);
 				crawlData.setSiteId(site.getId());
-				log.info(JSON.toJSONString(crawlData));
+				log.info("抓取数据入库:" + JSON.toJSONString(crawlData));
 				mapper.insert(crawlData);
 			}
-
 		}
+
 	}
 
 	public boolean matchUrl(String url) {
@@ -185,12 +185,13 @@ public class CommonCrawler extends BreadthCrawler {
 		if (StringUtils.isBlank(publishTime)) {
 			return false;
 		}
+		publishTime = publishTime.substring(0, 10);
 		String pattern = "\\d{4}(\\-|\\/|.)\\d{1,2}\\1\\d{1,2}";
 		Pattern r = Pattern.compile(pattern);
-		Matcher m = r.matcher( publishTime);
-		System.out.println(m.matches());
-
-		return false;
+		Matcher m = r.matcher(publishTime);
+		boolean result = m.matches();
+		System.out.println("checkPublishTime: " + m.matches());
+		return result;
 	}
 
 	public String getCommon(Page page, String features) {
@@ -249,6 +250,10 @@ public class CommonCrawler extends BreadthCrawler {
 			title = getMeta(page, features);
 		} else {
 			title = getCommon(page, features);
+		}
+		if (title.contains("年")) {
+			title = title.replace("年", "-").replace("月", "-").replace("日", "-").replace("时", ":").replace("分", ":")
+					.replace("秒", ":");
 		}
 		return title;
 	}

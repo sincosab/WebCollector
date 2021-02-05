@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  * 
  * </p>
  *
- * @author 
+ * @author
  * @since 2021-01-05
  */
 @Data
@@ -21,39 +21,33 @@ import lombok.EqualsAndHashCode;
 @TableName("crawl_site")
 public class CrawlSite implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+	@TableId(value = "id", type = IdType.AUTO)
+	private Long id;
 
-    private String site;
+	private String site;
+	private String channel;
+	private String province;
+	private String city;
 
-    private String initUrl;
+	private String baseUrl;
+	private String initUrl;
 
-    private String pageUrl;
+	private String pageUrl;
 
-    private Integer pageStart;
+	private Integer pageStart;
 
-    private Integer pageEnd;
+	private Integer pageEnd;
 
-    private String regex;
+	private String matchUrl;
+	private String title;
+	private String content;
+	private String publishTime;
+	private Integer status;
 
-    private String matchUrl;
+	private LocalDateTime createTime;
 
-    private String metaFlag;
-    
-    private String content;
+	private LocalDateTime updateTime;
 
-    private Integer status;
-
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
-
-    private String publishTime;
-    private String title;
-    private String keyword;
-    private String domain;
-    private String domainName;
-    private String baseUrl ;
 }

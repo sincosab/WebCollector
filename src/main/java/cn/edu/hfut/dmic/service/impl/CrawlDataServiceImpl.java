@@ -43,15 +43,25 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 	@Resource
 	private CrawlSiteMapper siteMapper;
 
+	@Resource
+	private CrawlDataMapper dataMapper;
+
 	@Override
 	// @Scheduled(cron = "0/5 * * * * *")
 	@Scheduled(cron = "0 0 */8 * * ?")
 
 	@PostConstruct
 	public synchronized void getSite() throws Exception {
-		log.info("getSite begin");
-		List<String> crawlDate = getCrawlDate();
+		log.info("初始化数据开始");
+		int siteId = 0;
+		int beforeMonth = 6;
+		initData(siteId);
+		List<String> crawlDate = getCrawlDate(beforeMonth);
+		executeSite(crawlDate);
+	}
 
+	public synchronized void executeSite(List<String> crawlDate) throws Exception {
+		log.info("获取站点数据开始");
 		LambdaQueryWrapper<CrawlSite> q = new LambdaQueryWrapper<>();
 		q.eq(CrawlSite::getStatus, "0").last("limit 0 , 10");
 		List<CrawlSite> list = siteMapper.selectList(q);
@@ -59,16 +69,13 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 			for (int i = 0; i < list.size(); i++) {
 				CrawlSite crawlSite = new CrawlSite();
 				crawlSite = list.get(i);
+				String siteName = crawlSite.getSite() + "_" + crawlSite.getChannel();
 				try {
 					String baseUrl = list.get(i).getBaseUrl();
 					crawlSite.setInitUrl(baseUrl + list.get(i).getInitUrl());
 					crawlSite.setPageUrl(baseUrl + list.get(i).getPageUrl());
+
 					// 有些网站详情页面不在当前根目录下
-					if (!list.get(i).getRegex().contains("//www.")) {
-						crawlSite.setRegex(baseUrl + list.get(i).getRegex());
-					} else {
-						crawlSite.setRegex(list.get(i).getRegex());
-					}
 					if (!list.get(i).getMatchUrl().contains("//www.")) {
 						crawlSite.setMatchUrl(baseUrl + list.get(i).getMatchUrl());
 					} else {
@@ -84,13 +91,13 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 					while (crawler.isResumable()) {
 					}
 					/* 结束后输出 */
-					log.info("获取站点数据结束" + crawlSite.getDomainName());
+					log.info("获取站点数据结束" + siteName);
 					CrawlSite site = new CrawlSite();
 					site.setId(list.get(i).getId());
 					site.setStatus(1);
 					siteMapper.updateById(site);
 				} catch (Exception e) {
-					log.info("getSite error " + crawlSite.getDomainName(), e);
+					log.info("获取站点数据 error " + siteName, e);
 				}
 			}
 			list = siteMapper.selectList(q);
@@ -98,19 +105,40 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 
 	}
 
-	public List<String> getCrawlDate() {
+	public void initData(int siteId) {
+
+		LambdaQueryWrapper<CrawlData> q0 = new LambdaQueryWrapper<>();
+		q0.gt(CrawlData::getId, 0);
+		dataMapper.delete(q0);
+
+		CrawlSite site = new CrawlSite();
+		site.setStatus(1);
+		LambdaQueryWrapper<CrawlSite> q = new LambdaQueryWrapper<>();
+		q.gt(CrawlSite::getId, 0);
+		siteMapper.update(site, q);
+
+		site.setStatus(0);
+		if (siteId == 0) {
+			q.gt(CrawlSite::getId, siteId);
+		} else {
+			q.eq(CrawlSite::getId, siteId);
+		}
+
+		siteMapper.update(site, q);
+	}
+
+	public List<String> getCrawlDate(int beforeMonth) {
 		List<String> crawlDate = new ArrayList<String>();
 		Date date = new Date();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		DateFormat format = new SimpleDateFormat("yyyyMM");
-		int beforeMonth = 4;
 		for (int i = 0; i < beforeMonth + 1; i++) {
 			date = calendar.getTime();
 			calendar.setTime(date);
 			String d = format.format(date);
 			crawlDate.add(d);
-			calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) -1);
+			calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
 		}
 		return crawlDate;
 	}
