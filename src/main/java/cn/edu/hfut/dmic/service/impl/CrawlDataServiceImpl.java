@@ -38,9 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-//@Component
-//@Lazy(false)
-
 public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData> implements ICrawlDataService {
 	@Resource
 	private CrawlSiteMapper siteMapper;
@@ -173,9 +170,7 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 
 	@PostConstruct
 	public void getGgzySite() throws Exception {
-	//	ggzyService.getSite(dataMapper);
-	///	GgzyServiceImpl.main(null);
-		GgzyServiceImpl s= new GgzyServiceImpl("ggzy",true,dataMapper);
+		GgzyServiceImpl s= new GgzyServiceImpl("crawl-ggzy",true,dataMapper);
 		s.start(2);
 	
 	}

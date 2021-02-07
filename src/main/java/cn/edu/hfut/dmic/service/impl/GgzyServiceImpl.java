@@ -1,62 +1,36 @@
 
 package cn.edu.hfut.dmic.service.impl;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import cn.edu.hfut.dmic.entity.CrawlData;
-import cn.edu.hfut.dmic.entity.CrawlSite;
 import cn.edu.hfut.dmic.entity.GgzyData;
-import cn.edu.hfut.dmic.entity.GgzyResult;
 import cn.edu.hfut.dmic.mapper.CrawlDataMapper;
-import cn.edu.hfut.dmic.mapper.CrawlSiteMapper;
-import cn.edu.hfut.dmic.service.ICrawlSiteService;
-import cn.edu.hfut.dmic.service.IGgzyService;
 import cn.edu.hfut.dmic.webcollector.example.CommonCrawler;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatum;
 import cn.edu.hfut.dmic.webcollector.model.CrawlDatums;
 import cn.edu.hfut.dmic.webcollector.model.Page;
 import cn.edu.hfut.dmic.webcollector.plugin.net.OkHttpRequester;
 import cn.edu.hfut.dmic.webcollector.plugin.rocks.BreadthCrawler;
-import cn.edu.hfut.dmic.webcollector.util.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 //全国公共资源交易平台
-//@Service
 @Slf4j
-//@Component
-//@Lazy(false)
 public class GgzyServiceImpl extends BreadthCrawler {
 
 	private CrawlDataMapper dataMapper;
 
 	Map<String, GgzyData> ggzyDataMap = new HashMap<String, GgzyData>();
-
-	public synchronized void getSite(CrawlDataMapper mapper) throws Exception {
-
-		// GgzyServiceImpl crawler = new GgzyServiceImpl("json_crawler", true);
-		// crawler.start(2);
-	}
 
 	public GgzyServiceImpl(final String crawlPath, boolean autoParse, CrawlDataMapper mapper) {
 		super(crawlPath, autoParse);
@@ -77,17 +51,10 @@ public class GgzyServiceImpl extends BreadthCrawler {
 			@Override
 			public Request.Builder createRequestBuilder(CrawlDatum crawlDatum) {
 				Request.Builder requestBuilder = super.createRequestBuilder(crawlDatum);
-
-				// String method = crawlDatum.meta("method");
-				// if (method.equals("POST")) {
 				RequestBody requestBody;
 				requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
 						.addFormDataPart("TIMEBEGIN_SHOW", "2021-01-28").build();
-
 				return requestBuilder.post(requestBody);
-				// }
-				// ExceptionUtils.fail("wrong method: " + method);
-				// return null;
 			}
 		});
 
