@@ -101,7 +101,7 @@ public class CommonCrawler extends BreadthCrawler {
 				crawlData.setContent(content);
 				String url = page.crawlDatum().url();
 				crawlData.setUrl(url);
-				crawlData.setPublishTime(publishTime);
+				crawlData.setPublish(publishTime);
 				crawlData.setSiteId(site.getId());
 				log.info("抓取数据入库:" + JSON.toJSONString(crawlData));
 				mapper.insert(crawlData);
@@ -167,21 +167,21 @@ public class CommonCrawler extends BreadthCrawler {
 
 	}
 
-	public boolean checkTitle(String title) {
+	public static boolean checkTitle(String title) {
 		if (StringUtils.isNotBlank(title)) {
 			return true;
 		}
 		return false;
 	}
 
-	public boolean checkContent(String content) {
+	public   static boolean checkContent(String content) {
 		if (StringUtils.isNotBlank(content)) {
 			return true;
 		}
 		return false;
 	}
 
-	public boolean checkPublishTime(String publishTime) {
+	public static  boolean checkPublishTime(String publishTime) {
 		if (StringUtils.isBlank(publishTime)) {
 			return false;
 		}
@@ -194,7 +194,7 @@ public class CommonCrawler extends BreadthCrawler {
 		return result;
 	}
 
-	public String getCommon(Page page, String features) {
+	public static String getCommon(Page page, String features) {
 		String str = "";
 		// 多个特征用，分割
 		try {
@@ -215,7 +215,7 @@ public class CommonCrawler extends BreadthCrawler {
 		return str;
 	}
 
-	public String getContent(Page page, String features) {
+	public  static String getContent(Page page, String features) {
 		String str = "";
 		// 多个特征用，分割
 		try {
@@ -234,17 +234,17 @@ public class CommonCrawler extends BreadthCrawler {
 		return str;
 	}
 
-	public String getTitle(Page page, String features) {
+	public  static String getTitle(Page page, String features) {
 		String title = "";
-		if (site.getTitle().contains("meta[")) {
-			title = getMeta(page, site.getTitle());
+		if (features.contains("meta[")) {
+			title = getMeta(page, features);
 		} else {
-			title = getCommon(page, site.getTitle());
+			title = getCommon(page,features);
 		}
 		return title;
 	}
 
-	public String getPublishTime(Page page, String features) {
+	public  static String getPublishTime(Page page, String features) {
 		String title = "";
 		if (features.contains("meta[")) {
 			title = getMeta(page, features);
@@ -255,10 +255,14 @@ public class CommonCrawler extends BreadthCrawler {
 			title = title.replace("年", "-").replace("月", "-").replace("日", "-").replace("时", ":").replace("分", ":")
 					.replace("秒", ":");
 		}
+		
+		if (title.contains("上传时间：")||title.contains("发布时间：")) {
+			title = title.replace("上传时间：","").replace("发布时间：","").trim();
+		}
 		return title;
 	}
 
-	public String getMeta(Page page, String features) {
+	public static String getMeta(Page page, String features) {
 		String str = "";
 		try {
 			Elements attr = page.select(features);

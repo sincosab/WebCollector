@@ -69,12 +69,13 @@ public class OkHttpRequester extends DefaultConfigured implements Requester{
         @SuppressWarnings("deprecation")
 		OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .followRedirects(false)
+             
              // .sslSocketFactory(createSSLSocketFactory())  
                 .sslSocketFactory(createSSLSocketFactory())  
                 .hostnameVerifier(new TrustAllHostnameVerifier())  
-                .followSslRedirects(false);
-            //    .connectTimeout(getConf().getConnectTimeout(), TimeUnit.MILLISECONDS)
-         //       .readTimeout(getConf().getReadTimeout(), TimeUnit.MILLISECONDS);
+                .followSslRedirects(false)
+               .connectTimeout(getConf().getConnectTimeout(), TimeUnit.SECONDS)
+               .readTimeout(getConf().getReadTimeout(), TimeUnit.SECONDS);
         return builder;
 
     }

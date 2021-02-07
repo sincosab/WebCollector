@@ -10,6 +10,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import cn.edu.hfut.dmic.entity.CrawlSite;
 import cn.edu.hfut.dmic.mapper.CrawlDataMapper;
 import cn.edu.hfut.dmic.mapper.CrawlSiteMapper;
 import cn.edu.hfut.dmic.service.ICrawlDataService;
+import cn.edu.hfut.dmic.service.IGgzyService;
 import cn.edu.hfut.dmic.webcollector.example.CommonCrawler;
 import cn.edu.hfut.dmic.webcollector.example.CommonCrawler2;
 import lombok.extern.slf4j.Slf4j;
@@ -46,15 +48,15 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 	@Resource
 	private CrawlDataMapper dataMapper;
 
-	@Override
-	// @Scheduled(cron = "0/5 * * * * *")
-	@Scheduled(cron = "0 0 */8 * * ?")
-
-	@PostConstruct
+	//@Autowired
+//private IGgzyService  ggzyService;
+	
+	//@Scheduled(cron = "0 0 */8 * * ?")
+	//@PostConstruct
 	public synchronized void getSite() throws Exception {
 		log.info("初始化数据开始");
 		int siteId = 0;
-		int beforeMonth = 6;
+		int beforeMonth = 1;
 		initData(siteId);
 		List<String> crawlDate = getCrawlDate(beforeMonth);
 		executeSite(crawlDate);
@@ -167,5 +169,14 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 		// webData,this.getBaseMapper());
 		// crawler.start(3);
 
+	}
+
+	@PostConstruct
+	public void getGgzySite() throws Exception {
+	//	ggzyService.getSite(dataMapper);
+	///	GgzyServiceImpl.main(null);
+		GgzyServiceImpl s= new GgzyServiceImpl("ggzy",true,dataMapper);
+		s.start(2);
+	
 	}
 }

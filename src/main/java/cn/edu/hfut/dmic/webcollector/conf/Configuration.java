@@ -30,8 +30,8 @@ public class Configuration{
     public static final String KEY_MAX_EXECUTE_COUNT = "MAX_EXECUTE_COUNT";
     public static final String KEY_TOP_N = "TOP_N";
 
-    public static final String KEY_CONNECT_TIMEOUT = "CONNECT_TIMEOUT";
-    public static final String KEY_READ_TIMEOUT = "READ_TIMEOUT";
+    public static final String KEY_CONNECT_TIMEOUT = "300000";
+    public static final String KEY_READ_TIMEOUT = "300000";
 
 
 
@@ -43,7 +43,7 @@ public class Configuration{
     public static final String KEY_MAX_REDIRECT= "MAX_REDIRECT";
     public static final String KEY_MAX_RECEIVE_SIZE = "MAX_RECEIVE_SIZE";
 
-    public static final String KEY_DEFAULT_USER_AGENT = "DEFAULT_USER_AGENT";
+    public static final String KEY_DEFAULT_USER_AGENT = "127.0.0.1:8888";
     public static final String KEY_DEFAULT_COOKIE = "COOKIE";
 
     public static final String KEY_AUTO_DETECT_IMG = "AUTO_DETECT_IMG";

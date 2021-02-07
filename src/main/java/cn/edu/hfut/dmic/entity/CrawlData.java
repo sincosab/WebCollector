@@ -26,9 +26,15 @@ public class CrawlData implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     private Long siteId;
+    private String siteName;
+    private String channel;
+    private String type;
+    private String province;
+    private String city;
+
     private String title;
     private String content;
-    private String publishTime;
+    private String publish;
     private Integer status;
     private String url;
     private LocalDateTime createTime;
