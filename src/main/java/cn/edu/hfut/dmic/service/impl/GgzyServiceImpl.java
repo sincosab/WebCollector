@@ -24,7 +24,7 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-//全国公共资源交易平台
+
 @Slf4j
 public class GgzyServiceImpl extends BreadthCrawler {
 
