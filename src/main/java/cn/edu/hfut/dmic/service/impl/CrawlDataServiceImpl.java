@@ -6,12 +6,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -23,9 +22,7 @@ import cn.edu.hfut.dmic.entity.CrawlSite;
 import cn.edu.hfut.dmic.mapper.CrawlDataMapper;
 import cn.edu.hfut.dmic.mapper.CrawlSiteMapper;
 import cn.edu.hfut.dmic.service.ICrawlDataService;
-import cn.edu.hfut.dmic.service.IGgzyService;
 import cn.edu.hfut.dmic.webcollector.example.CommonCrawler;
-import cn.edu.hfut.dmic.webcollector.example.CommonCrawler2;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,21 +42,120 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 	@Resource
 	private CrawlDataMapper dataMapper;
 
-	//@Autowired
-//private IGgzyService  ggzyService;
-	
-	//@Scheduled(cron = "0 0 */8 * * ?")
+	// 获取今天数据
 	//@PostConstruct
+	public void getTodayGgzySite() throws Exception {
+		int beforeDate = 0;
+		String dealTime = "01";
+		String dealClissfy = "00";
+		String dealStage = "0000";
+		String sourceType = "1";
+		List<String> crawlDate = getCrawlDate(beforeDate);
+		getGgzyData(dealTime, crawlDate, sourceType, dealClissfy, dealStage);
+	}
+
+	// 获取昨天数据
+	// @PostConstruct
+	public void getLastDayGgzySite() throws Exception {
+		String dealTime = "06";
+		String dealClissfy = "00";
+		String dealStage = "0000";
+		String sourceType = "1";
+		List<String> crawlDate = getLastDate();
+		getGgzyData(dealTime, crawlDate, sourceType, dealClissfy, dealStage);
+	}
+
+	// 获取最近几天数据
+// @PostConstruct
+	public void getRecentDayGgzySite() throws Exception {
+		String dealTime = "02";
+		String dealClissfy = "00";
+		String dealStage = "0000";
+		String sourceType = "1";
+		List<String> crawlDate= new 	ArrayList<String>();
+		crawlDate.add("2021-02-09");//end
+		crawlDate.add("2021-01-31");//begin
+		getGgzyData(dealTime, crawlDate, sourceType, dealClissfy, dealStage);
+	}
+
+	// 获取央企数据
+ @PostConstruct
+	public void getYqGgzySite() throws Exception {
+		int beforeDate = 0;
+		String dealTime = "02";
+		String dealClissfy = "01";
+		String dealStage = "0100";
+		String sourceType = "2";
+		beforeDate = 9;
+		List<String> crawlDate = getCrawlDate(beforeDate);
+		getGgzyData(dealTime, crawlDate, sourceType, dealClissfy, dealStage);
+	}
+
+	// 获取数据
+	public void getGgzyData(String dealTime, List<String> crawlDate, String sourceType, String dealClissfy,
+			String dealStage) throws Exception {
+		int siteId = 0;
+		initData(siteId);
+		String begin = crawlDate.get(crawlDate.size() - 1);
+		String end = crawlDate.get(0);
+		/*
+		 * http://deal.ggzy.gov.cn/ds/deal/dealList_find.jsp?TIMEBEGIN_SHOW=2021-01-28&
+		 * TIMEEND_SHOW=2021-02-06&TIMEBEGIN=2021-01-28&TIMEEND=2021-02-06&SOURCE_TYPE=1
+		 * &DEAL_TIME=02&DEAL_CLASSIFY=00&DEAL_STAGE=0000&DEAL_PROVINCE=0&DEAL_CITY=0&
+		 * DEAL_PLATFORM=0&BID_PLATFORM=0&DEAL_TRADE=0&isShowAll=1" +
+		 * "&PAGENUMBER=2&FINDTXT=
+		 */
+		String url = "http://deal.ggzy.gov.cn/ds/deal/dealList_find.jsp?" +
+		      "TIMEBEGIN_SHOW=" + begin +
+		       "&TIMEEND_SHOW="+ end +
+		        "&TIMEBEGIN=" + begin +
+				"&TIMEEND=" + end +
+				"&SOURCE_TYPE=" + sourceType + 
+				"&DEAL_TIME="+ dealTime +
+				"&DEAL_CLASSIFY=" + dealClissfy +
+				"&DEAL_STAGE=" + dealStage
+				+ "&DEAL_PROVINCE=0&DEAL_CITY=0&DEAL_PLATFORM=0&BID_PLATFORM=0" + "&DEAL_TRADE=0&isShowAll=1"
+				+ "&PAGENUMBER=1&FINDTXT=";
+		log.info("第1次分页抓取");
+		GgzyServiceImpl crawler = new GgzyServiceImpl("crawl-ggzy", true, dataMapper, url);
+		crawler.start(2);
+		/* 开始阻塞 */
+		while (crawler.isResumable()) {
+		}
+		int pageCount = crawler.getPageCount() + 1;
+		log.info("抓取总页数：" + pageCount);
+		Random r = new Random();
+		int a = 100;
+		int b = 200;
+		int c = r.nextInt(b - a + 1) + a;
+		for (int i = 2; i < pageCount; i++) {
+			try {
+				log.info("第" + i + "次分页抓取,已经抓取总数：" + (i - 1) * 20);
+				Thread.sleep(c);
+				String pages = url.replace("PAGENUMBER=1", "PAGENUMBER=" + i);
+				GgzyServiceImpl crawl = new GgzyServiceImpl("crawl-ggzy", true, dataMapper, pages);
+				crawl.start(2);
+				while (crawl.isResumable()) {
+				}
+				crawl.stop();
+			} catch (Exception e) {
+				log.info("分页抓取错误", e);
+			}
+		}
+	}
+
+	// @Scheduled(cron = "0 0 */8 * * ?")
+	// @PostConstruct
 	public synchronized void getSite() throws Exception {
 		log.info("初始化数据开始");
 		int siteId = 0;
 		int beforeMonth = 1;
 		initData(siteId);
-		List<String> crawlDate = getCrawlDate(beforeMonth);
-		executeSite(crawlDate);
+		List<String> crawlMonth = getCrawlMonth(beforeMonth);
+		executeSite(crawlMonth);
 	}
 
-	public synchronized void executeSite(List<String> crawlDate) throws Exception {
+	public synchronized void executeSite(List<String> crawlMonth) throws Exception {
 		log.info("获取站点数据开始");
 		LambdaQueryWrapper<CrawlSite> q = new LambdaQueryWrapper<>();
 		q.eq(CrawlSite::getStatus, "0").last("limit 0 , 10");
@@ -82,7 +178,7 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 					}
 
 					CommonCrawler crawler = new CommonCrawler("crawl", true, crawlSite, this.getBaseMapper(),
-							crawlDate);
+							crawlMonth);
 					// CommonCrawler2 crawler = new CommonCrawler2("crawl", true, crawlSite,
 					// this.getBaseMapper());
 					crawler.start(3);
@@ -122,11 +218,10 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 		} else {
 			q.eq(CrawlSite::getId, siteId);
 		}
-
 		siteMapper.update(site, q);
 	}
 
-	public List<String> getCrawlDate(int beforeMonth) {
+	public List<String> getCrawlMonth(int beforeMonth) {
 		List<String> crawlDate = new ArrayList<String>();
 		Date date = new Date();
 		Calendar calendar = Calendar.getInstance();
@@ -139,6 +234,37 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 			crawlDate.add(d);
 			calendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 1);
 		}
+		return crawlDate;
+	}
+
+	public List<String> getCrawlDate(int beforeDay) {
+		List<String> crawlDate = new ArrayList<String>();
+		Date date = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		for (int i = 0; i < beforeDay + 1; i++) {
+			date = calendar.getTime();
+			calendar.setTime(date);
+			String d = format.format(date);
+			crawlDate.add(d);
+			calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) - 1);
+		}
+		return crawlDate;
+	}
+
+	public List<String> getLastDate() {
+		List<String> crawlDate = new ArrayList<String>();
+		Date date = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) - 1);
+		date = calendar.getTime();
+		calendar.setTime(date);
+		String d = format.format(date);
+		crawlDate.add(d);
+		crawlDate.add(d);
 		return crawlDate;
 	}
 
@@ -168,10 +294,4 @@ public class CrawlDataServiceImpl extends ServiceImpl<CrawlDataMapper, CrawlData
 
 	}
 
-	@PostConstruct
-	public void getGgzySite() throws Exception {
-		GgzyServiceImpl s= new GgzyServiceImpl("crawl-ggzy",true,dataMapper);
-		s.start(2);
-	
-	}
 }

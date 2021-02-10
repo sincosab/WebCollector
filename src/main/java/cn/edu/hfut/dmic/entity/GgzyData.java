@@ -1,10 +1,7 @@
 package cn.edu.hfut.dmic.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
 import java.io.Serializable;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,12 +22,17 @@ public class GgzyData implements Serializable {
 	String classify;
 	String title;
 	String timeShow;
+
 	String stageName;
 	String platformName;
+	//业务类型
 	String classifyShow;
+	//行业
 	String tradeShow;
+	//行政区
 	String districtShow;
 	String url;
+	//信息类型，招标，中标
 	String stageShow;
 	String titleShow;
 

@@ -48,10 +48,10 @@ public class CommonCrawler extends BreadthCrawler {
 	private List<String> crawlDate;
 
 	public CommonCrawler(String crawlPath, boolean autoParse, CrawlSite crawlSite, CrawlDataMapper baseMapper,
-			List<String> crawlBeginDate) {
+			List<String> crawlBeginMonth) {
 		super(crawlPath, autoParse);
 		mapper = baseMapper;
-		crawlDate = crawlBeginDate;
+		crawlDate = crawlBeginMonth;
 		addSeed(crawlSite.getInitUrl());
 		for (int i = crawlSite.getPageStart(); i < crawlSite.getPageEnd() + 1; i++) {
 			addSeed(crawlSite.getPageUrl() + i + ".htm");
@@ -101,7 +101,7 @@ public class CommonCrawler extends BreadthCrawler {
 				crawlData.setContent(content);
 				String url = page.crawlDatum().url();
 				crawlData.setUrl(url);
-				crawlData.setPublish(publishTime);
+				crawlData.setPublishTime(publishTime);
 				crawlData.setSiteId(site.getId());
 				log.info("抓取数据入库:" + JSON.toJSONString(crawlData));
 				mapper.insert(crawlData);
@@ -190,7 +190,6 @@ public class CommonCrawler extends BreadthCrawler {
 		Pattern r = Pattern.compile(pattern);
 		Matcher m = r.matcher(publishTime);
 		boolean result = m.matches();
-		System.out.println("checkPublishTime: " + m.matches());
 		return result;
 	}
 
@@ -256,8 +255,8 @@ public class CommonCrawler extends BreadthCrawler {
 					.replace("秒", ":");
 		}
 		
-		if (title.contains("上传时间：")||title.contains("发布时间：")) {
-			title = title.replace("上传时间：","").replace("发布时间：","").trim();
+		if (StringUtils.isNotBlank(title) && title.length()>16) {
+			title = title.substring(title.length()-16);
 		}
 		return title;
 	}

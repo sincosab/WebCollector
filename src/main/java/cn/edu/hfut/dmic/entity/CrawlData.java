@@ -28,13 +28,13 @@ public class CrawlData implements Serializable {
     private Long siteId;
     private String siteName;
     private String channel;
-    private String type;
+    private String informationType;
     private String province;
     private String city;
-
-    private String title;
+    private String industry;
+    String title;
     private String content;
-    private String publish;
+    private String publishTime;
     private Integer status;
     private String url;
     private LocalDateTime createTime;

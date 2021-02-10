@@ -2,9 +2,8 @@
 package cn.edu.hfut.dmic.service.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.JsonArray;
@@ -24,7 +23,6 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-
 @Slf4j
 public class GgzyServiceImpl extends BreadthCrawler {
 
@@ -32,28 +30,18 @@ public class GgzyServiceImpl extends BreadthCrawler {
 
 	Map<String, GgzyData> ggzyDataMap = new HashMap<String, GgzyData>();
 
-	public GgzyServiceImpl(final String crawlPath, boolean autoParse, CrawlDataMapper mapper) {
+	int pageCount = 0;
+
+	public GgzyServiceImpl(final String crawlPath, boolean autoParse, CrawlDataMapper mapper, String url) {
 		super(crawlPath, autoParse);
 		dataMapper = mapper;
-		// addSeed(new
-		// CrawlDatum("http://deal.ggzy.gov.cn/ds/deal/dealList_find.jsp?TIMEBEGIN_SHOW=2021-01-28&TIMEEND_SHOW=2021-02-06&TIMEBEGIN=2021-01-28&TIMEEND=2021-02-06&SOURCE_TYPE=1&DEAL_TIME=02&DEAL_CLASSIFY=00&DEAL_STAGE=0000&DEAL_PROVINCE=0&DEAL_CITY=0&DEAL_PLATFORM=0&BID_PLATFORM=0&DEAL_TRADE=0&isShowAll=1&PAGENUMBER=1&FINDTXT=")
-		// .meta("method", "POST"));
-
-		// addSeed("http://deal.ggzy.gov.cn/");
-		addRegex("http://deal.ggzy.gov.cn/information/html/.*");
-		// addRegex("-.*#.*");
-
-		addSeed(new CrawlDatum(
-				"http://deal.ggzy.gov.cn/ds/deal/dealList_find.jsp?TIMEBEGIN_SHOW=2021-01-28&TIMEEND_SHOW=2021-02-06&TIMEBEGIN=2021-01-28&TIMEEND=2021-02-06&SOURCE_TYPE=1&DEAL_TIME=02&DEAL_CLASSIFY=00&DEAL_STAGE=0000&DEAL_PROVINCE=0&DEAL_CITY=0&DEAL_PLATFORM=0&BID_PLATFORM=0&DEAL_TRADE=0&isShowAll=1"
-						+ "&PAGENUMBER=2&FINDTXT=").meta("method", "POST"));
-		addRegex(".*");
+		addSeed(new CrawlDatum(url));
 		setRequester(new OkHttpRequester() {
 			@Override
 			public Request.Builder createRequestBuilder(CrawlDatum crawlDatum) {
 				Request.Builder requestBuilder = super.createRequestBuilder(crawlDatum);
 				RequestBody requestBody;
-				requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-						.addFormDataPart("TIMEBEGIN_SHOW", "2021-01-28").build();
+				requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("", "").build();
 				return requestBuilder.post(requestBody);
 			}
 		});
@@ -63,25 +51,30 @@ public class GgzyServiceImpl extends BreadthCrawler {
 	@Override
 	public void visit(Page page, CrawlDatums next) {
 		if (page != null && !page.url().contains("information/html")) {
-			System.out.println("page.url()信息：" + page.url());
 			JsonObject jsonObject = page.jsonObject();
 			JsonArray jsonArray = (JsonArray) jsonObject.get("data");
+			pageCount = Integer.parseInt(jsonObject.get("ttlpage").getAsString());
 			if (jsonArray != null) {
 				for (int i = 0; i < jsonArray.size(); i++) {
 					JsonObject json = jsonArray.get(i).getAsJsonObject();
 					String url = json.get("url").getAsString();
 					url = url.replace("html/a/", "html/b/");
-					System.out.println("url信息：" + url);
 					GgzyData ggzyData = new GgzyData();
 					ggzyData.setDistrictShow(json.get("districtShow").getAsString());
 					ggzyData.setClassifyShow(json.get("classifyShow").getAsString());
 					ggzyData.setStageShow(json.get("stageShow").getAsString());
 					ggzyData.setPlatformName(json.get("platformName").getAsString());
+					ggzyData.setTradeShow(json.get("tradeShow").getAsString());
 					ggzyDataMap.put(url, ggzyData);
 					next.addAndReturn(url).meta("method", "POST");
 				}
+				try {
+					// Thread.sleep(1000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
-			System.out.println("JSON信息：" + jsonObject);
+			// log.info("JSON信息：" + jsonObject);
 		}
 		boolean succeed = false;
 		boolean check = false;
@@ -93,67 +86,62 @@ public class GgzyServiceImpl extends BreadthCrawler {
 			String featureTitle = "div.detail h4.h4_o";
 			String featureContent = "div#mycontent";
 			String featurePublish = ".detail .p_o span";
-
 			title = CommonCrawler.getTitle(page, featureTitle);
-			System.out.println("url信息：" + page.url());
-			System.out.println("title信息：" + title);
 			check = CommonCrawler.checkTitle(title);
 			if (check) {
 				content = CommonCrawler.getContent(page, featureContent);
 				check = CommonCrawler.checkContent(content);
 			}
-			System.out.println("content信息：" + content);
 			if (check) {
 				publishTime = CommonCrawler.getPublishTime(page, featurePublish);
 				check = CommonCrawler.checkPublishTime(publishTime);
 			}
-			System.out.println("publishTime信息：" + publishTime);
+			check = true;
 			if (check) {
 				CrawlData crawlData = new CrawlData();
 				crawlData.setTitle(title);
 				crawlData.setContent(content);
 				String url = page.crawlDatum().url();
 				crawlData.setUrl(url);
-				crawlData.setPublish(publishTime);
+				crawlData.setPublishTime(publishTime);
 				GgzyData ggzyData = ggzyDataMap.get(url);
 				crawlData.setProvince(ggzyData.getDistrictShow());
 				crawlData.setSiteName(ggzyData.getPlatformName());
-				crawlData.setType(ggzyData.getStageShow());
+				crawlData.setInformationType(ggzyData.getStageShow());
 				crawlData.setChannel(ggzyData.getClassifyShow());
+				crawlData.setIndustry(ggzyData.getTradeShow());
 				// crawlData.setId(-1L);
-				log.info("抓取数据入库:" + JSON.toJSONString(crawlData));
+				// log.info("抓取数据入库:" + JSON.toJSONString(crawlData));
 				if (crawlData != null) {
 					dataMapper.insert(crawlData);
 				}
 			}
 		}
-
 		return;
 	}
 
-	public String getCommon(Page page, String features) {
-		String str = "";
-		// 多个特征用，分割
-		try {
-			if (StringUtils.isNotBlank(features)) {
-				String featuresArray[] = features.split(",");
-				for (int i = 0; i < featuresArray.length; i++) {
-					if (page.select(featuresArray[i]).first() != null) {
-						str = page.select(featuresArray[i]).first().text();
-						if (StringUtils.isNotBlank(str)) {
-							break;
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.error("getCommon 解析内容异常:" + e.getLocalizedMessage(), e);
+	public GgzyServiceImpl(final String crawlPath, boolean autoParse, CrawlDataMapper mapper, List<String> listUrl) {
+		super(crawlPath, autoParse);
+		dataMapper = mapper;
+		for (int i = 0; i < listUrl.size(); i++) {
+			addSeed(new CrawlDatum(listUrl.get(i)));
 		}
-		return str;
+		setRequester(new OkHttpRequester() {
+			@Override
+			public Request.Builder createRequestBuilder(CrawlDatum crawlDatum) {
+				Request.Builder requestBuilder = super.createRequestBuilder(crawlDatum);
+				RequestBody requestBody;
+				requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("", "").build();
+				return requestBuilder.post(requestBody);
+			}
+		});
+	}
+
+	public int getPageCount() throws Exception {
+		return pageCount;
 	}
 
 	public static void main(String[] args) throws Exception {
-
 		// GgzyServiceImpl crawler = new GgzyServiceImpl("json_crawler", true,);
 		// crawler.start(2);
 	}
